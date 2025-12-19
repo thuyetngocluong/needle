@@ -26,7 +26,7 @@ import Foundation
 // method in the base component class. Generate extensions to all the
 // component subclasses that override the method to instantiate the
 // dependency providers.
-public class __DependencyProviderRegistry {
+public class __DependencyProviderRegistry: @unchecked Sendable {
 
     /// The singleton instance.
     public static let instance = __DependencyProviderRegistry()

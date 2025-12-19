@@ -24,5 +24,5 @@ let package = Package(
             dependencies: ["NeedleFoundationTest"],
             exclude: []),
     ],
-    swiftLanguageVersions: [.v6]
+    swiftLanguageVersions: [.version("6.0")]
 )
