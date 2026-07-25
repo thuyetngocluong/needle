@@ -1,6 +1,7 @@
 BINARY_FOLDER_PREFIX?=/usr/local
 GENERATOR_FOLDER=Generator
 GENERATOR_ARCHIVE_PATH=$(shell cd $(GENERATOR_FOLDER) && swift build $(SWIFT_BUILD_FLAGS) --show-bin-path)/needle
+GENERATOR_BUNDLE_BIN_FOLDER=$(GENERATOR_FOLDER)/bin/needle.artifactbundle/needle/bin
 GENERATOR_VERSION_FOLDER_PATH=$(GENERATOR_FOLDER)/Sources/needle
 GENERATOR_VERSION_FILE_PATH=$(GENERATOR_VERSION_FOLDER_PATH)/Version.swift
 SWIFT_BUILD_FLAGS=--disable-sandbox -c release --arch arm64 --arch x86_64
@@ -26,8 +27,9 @@ release:
 %:
 	@:
 	sed -i '' "s/\(s.version.*=.*'\).*\('\)/\1$(NEW_VERSION)\2/" NeedleFoundation.podspec
+	sed -i '' "s/\(\"version\": \"\).*\(\"\)/\1$(NEW_VERSION)\2/" $(GENERATOR_FOLDER)/bin/needle.artifactbundle/info.json
 	make archive_generator
-	git add $(GENERATOR_FOLDER)/bin/needle
+	git add $(GENERATOR_FOLDER)/bin/needle.artifactbundle
 	git add $(GENERATOR_VERSION_FILE_PATH)
 	git add NeedleFoundation.podspec
 	$(eval NEW_VERSION_TAG := v$(NEW_VERSION))
@@ -41,4 +43,4 @@ publish:
 	pod trunk push --allow-warnings
 
 archive_generator: build
-	mv $(GENERATOR_ARCHIVE_PATH) $(GENERATOR_FOLDER)/bin/
+	mv $(GENERATOR_ARCHIVE_PATH) $(GENERATOR_BUNDLE_BIN_FOLDER)/

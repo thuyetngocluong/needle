@@ -43,7 +43,13 @@ class PluginizedComponentTests: XCTestCase {
         let mockPluginizedComponent = MockPluginizedComponent()
 
         XCTAssertTrue(mockPluginizedComponent.nonCoreComponent is MockNonCoreComponent)
+        #if NEEDLE_DYNAMIC
+        // In dynamic mode `pluginExtension` is the dynamic-lookup wrapper, not
+        // the generated provider registered with the registry.
+        XCTAssertNotNil(mockPluginizedComponent.pluginExtension)
+        #else
         XCTAssertTrue(mockPluginizedComponent.pluginExtension is EmptyPluginExtensionsProvider)
+        #endif
     }
 
     func test_bindTo_verifyNonCoreComponentLifecycle() {

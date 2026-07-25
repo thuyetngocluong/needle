@@ -85,9 +85,37 @@ Please follow the standard pod integration process and use `NeedleFoundation` po
 
 ### Install code generator
 
+#### Using Swift Package Manager plugins (recommended, no separate installation)
+
+If the `NeedleFoundation` framework is integrated via Swift Package Manager, the code generator is already bundled with the package — no Homebrew or manual installation is needed. Two plugins are provided:
+
+**Build tool plugin** — runs the generator automatically before each build of the target it is attached to (the generated file is compiled into the target for you; do not commit it):
+
+```swift
+targets: [
+    .executableTarget(
+        name: "App",
+        dependencies: [.product(name: "NeedleFoundation", package: "needle")],
+        plugins: [.plugin(name: "NeedleBuildToolPlugin", package: "needle")]),
+],
+```
+
+In Xcode projects, add `NeedleBuildToolPlugin` under the target's *Build Phases → Run Build Tool Plug-ins* instead.
+
+The build tool plugin parses the sources of the target it is attached to plus those of its dependency targets in the same package (or, for Xcode projects, its dependency targets in the same project) — external packages are not parsed. Note that dependency-providing properties on components must be `public` for the generator to see them.
+
+**Command plugin** — run the generator manually and commit the generated file, mirroring the classic workflow:
+
+```
+swift package --allow-writing-to-package-directory needle \
+    generate Sources/App/NeedleGenerated.swift Sources/App
+```
+
+All regular generator arguments are supported; run `swift package needle --help` for the full list.
+
 #### Using [Carthage](https://github.com/Carthage/Carthage)
 
-If Carthage is used to integrate  the `NeedleFoundation` framework, then a copy of the code generator executable of the corresponding version is already downloaded in the Carthage folder. It can be found at `Carthage/Checkouts/needle/Generator/bin/needle`.
+If Carthage is used to integrate  the `NeedleFoundation` framework, then a copy of the code generator executable of the corresponding version is already downloaded in the Carthage folder. It can be found at `Carthage/Checkouts/needle/Generator/bin/needle.artifactbundle/needle/bin/needle`.
 
 #### Using [Homebrew](https://github.com/Homebrew/brew)
 

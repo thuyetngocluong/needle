@@ -87,7 +87,7 @@ targets: [
 
 #### [Carthage](https://github.com/Carthage/Carthage) 사용 시
 
-만약 Carthage를 사용하여 `NeedleFoundation` 프레임워크를 통합한 경우, 해당 버전의 코드 제너레이터 실행 파일이 이미 Carthage 폴더에 다운로드 되어 있습니다. `Carthage/Checkouts/needle/Generator/bin/needle`에서 찾을 수 있습니다.
+만약 Carthage를 사용하여 `NeedleFoundation` 프레임워크를 통합한 경우, 해당 버전의 코드 제너레이터 실행 파일이 이미 Carthage 폴더에 다운로드 되어 있습니다. `Carthage/Checkouts/needle/Generator/bin/needle.artifactbundle/needle/bin/needle`에서 찾을 수 있습니다.
 
 #### [Homebrew](https://github.com/Homebrew/brew) 사용 시
 

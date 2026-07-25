@@ -39,7 +39,7 @@ public class __DependencyProviderRegistry: @unchecked Sendable {
     /// - parameter dependencyProviderFactory: The closure that takes in a
     /// component to be injected and returns a provider instance that conforms
     /// to the component's dependency protocol.
-    public func registerDependencyProviderFactory(forPathHash pathHash: Int, _ dependencyProviderFactory: @escaping (Scope) -> AnyObject) {
+    public func registerDependencyProviderFactory(forPathHash pathHash: Int, _ dependencyProviderFactory: @escaping @Sendable (Scope) -> AnyObject) {
         providerFactoryLock.lock()
         defer {
             providerFactoryLock.unlock()
@@ -56,7 +56,7 @@ public class __DependencyProviderRegistry: @unchecked Sendable {
     /// - parameter dependencyProviderFactory: The closure that takes in a
     /// component to be injected and returns a provider instance that conforms
     /// to the component's dependency protocol.
-    public func registerDependencyProviderFactory(`for` componentPath: String, _ dependencyProviderFactory: @escaping (Scope) -> AnyObject) {
+    public func registerDependencyProviderFactory(`for` componentPath: String, _ dependencyProviderFactory: @escaping @Sendable (Scope) -> AnyObject) {
         providerFactoryLock.lock()
         defer {
             providerFactoryLock.unlock()
@@ -84,7 +84,7 @@ public class __DependencyProviderRegistry: @unchecked Sendable {
     ///
     /// - parameter componentpath: The component path that uses the returned dependency provider.
     /// - returns: The dependency provider for the given componentpath.
-    public func dependencyProviderFactory(`for` componentPath: String) -> ((Scope) -> AnyObject)? {
+    public func dependencyProviderFactory(`for` componentPath: String) -> (@Sendable (Scope) -> AnyObject)? {
         providerFactoryLock.lock()
         defer {
             providerFactoryLock.unlock()
@@ -102,12 +102,16 @@ public class __DependencyProviderRegistry: @unchecked Sendable {
     /// - returns: The dependency provider for the given component.
     func dependencyProvider(`for` component: Scope) -> AnyObject {
         providerFactoryLock.lock()
-        defer {
-            providerFactoryLock.unlock()
-        }
-
+        // The lazy `path` computation relies on this lock for thread-safety,
+        // so it must occur while the lock is held.
         let key = StableFNVHasher.hash(component.path, separator: "->")
-        if let factory = providerFactories[key] {
+        let factory = providerFactories[key]
+        providerFactoryLock.unlock()
+
+        if let factory = factory {
+            // Invoke the factory outside the lock, so a slow provider
+            // construction on one thread does not serialize component
+            // creation on all other threads.
             return factory(component)
         } else {
             // This case should never occur with properly generated Needle code.
@@ -117,7 +121,7 @@ public class __DependencyProviderRegistry: @unchecked Sendable {
     }
 
     private let providerFactoryLock = NSRecursiveLock()
-    private var providerFactories = [Int: (Scope) -> AnyObject]()
+    private var providerFactories = [Int: @Sendable (Scope) -> AnyObject]()
 
     private init() {}
 }

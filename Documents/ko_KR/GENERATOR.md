@@ -45,7 +45,7 @@ Needle 코드 제너레이터는 개발자가 작성한 Swift DI 코드를 구�
 github "https://github.com/uber/needle.git" ~> VERSION_OF_NEEDLE
 ```
 
-카르타고 빌드가 완료되면, 제너레이터 바이너리는 `Carthage/Checkouts/needle/Generator/bin/needle`에 위치합니다.
+카르타고 빌드가 완료되면, 제너레이터 바이너리는 `Carthage/Checkouts/needle/Generator/bin/needle.artifactbundle/needle/bin/needle`에 위치합니다.
 
 #### [Homebrew](https://github.com/Homebrew/brew) 사용 시
 
@@ -63,14 +63,14 @@ Needle의 제너레이터는 명령줄에서 호출할 수 있지만 빌드 시�
 2. Xcode에서 앱의 executable target's의 "Build Phases" 섹션의 "Run Script"를 추가합니다. ![](Images/build_phases.jpeg)
 3. "Shell"의 값이 `/bin/sh`으로 되어 있는지 확인합니다.
 4. 스크립트 입력란에 제너레이터를 호출하는 shell script를 추가합니다. 예를 들어 샘플 TicTacToe 앱은 다음 스크립트를 사용합니다.  
- `export SOURCEKIT_LOGGING=0 && ../Carthage/Checkouts/needle/Generator/bin/needle generate Sources/NeedleGenerated.swift Sources/ --header-doc ../../copyright_header.txt`.
-    * 만약 Carthage를 통해 설치한 경우 Xcode 프로젝트 파일이 있는 위치를 기준으로 Carthage Checkouts 디렉토리에 있는 바이너리를 호출할 수 있습니다. 샘플에서 이 경로는 `../Carthage/Checkouts/needle/Generator/bin/needle generate`입니다.
+ `export SOURCEKIT_LOGGING=0 && ../Carthage/Checkouts/needle/Generator/bin/needle.artifactbundle/needle/bin/needle generate Sources/NeedleGenerated.swift Sources/ --header-doc ../../copyright_header.txt`.
+    * 만약 Carthage를 통해 설치한 경우 Xcode 프로젝트 파일이 있는 위치를 기준으로 Carthage Checkouts 디렉토리에 있는 바이너리를 호출할 수 있습니다. 샘플에서 이 경로는 `../Carthage/Checkouts/needle/Generator/bin/needle.artifactbundle/needle/bin/needle generate`입니다.
     * 만약 Homebrew를 통해 설치된 경우 `needle generate`를 직접 호출하여 바이너리를 실행할 수 있습니다.
 
 스크립트의 첫번째 명령어인 `export SOURCEKIT_LOGGING=0`는 SourceKit 로깅이 보이지 않도록 설정합니다. 만약 해당 명령어를 실행하지 않으면 Xcode는 로그를 오류 메시지로 표시합니다. 이것은 단순히 Xcode에서 노이즈를 줄이기 위한 것입니다. 꼭 필요한 것은 아닙니다. 나머지 스크립트는 몇 가지 인수와 함께 제너레이터 실행 파일을 호출합니다.
 
 만약 제너레이터가 Carthage를 통해 설치된 경우 제너레이터 실행 바이너리의 경로는 Xcode 프로젝트의 위치에 상대적이라는 점을 명심하십시오.  
-샘플 앱에서 경로는 `../Carthage/Checkouts/needle/Generator/bin/needle`입니다.
+샘플 앱에서 경로는 `../Carthage/Checkouts/needle/Generator/bin/needle.artifactbundle/needle/bin/needle`입니다.
  이는 프로젝트의 폴더 구조에 따라 다를 수 있습니다.
 
 - 첫 번째 인수 `generate`는 코드 생성 명령을 실행하도록 실행 파일에 지시합니다.

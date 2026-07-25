@@ -40,7 +40,11 @@ class DependencyProviderRegistryTests: XCTestCase {
         let actualProvider = __DependencyProviderRegistry.instance.dependencyProvider(for: appComponent.rootComponent)
 
         XCTAssertTrue(expectedProvider === actualProvider)
+        #if !NEEDLE_DYNAMIC
+        // In dynamic mode `dependency` is the dynamic-lookup wrapper, which
+        // never goes through the registry.
         XCTAssertTrue(appComponent.rootComponent.dependency === expectedProvider)
+        #endif
     }
 
     func test_registerProviderFactoryForPathHash_verifyRetrievingProvider() {
@@ -56,7 +60,11 @@ class DependencyProviderRegistryTests: XCTestCase {
         let actualProvider = __DependencyProviderRegistry.instance.dependencyProvider(for: appComponent.rootComponent)
 
         XCTAssertTrue(expectedProvider === actualProvider)
+        #if !NEEDLE_DYNAMIC
+        // In dynamic mode `dependency` is the dynamic-lookup wrapper, which
+        // never goes through the registry.
         XCTAssertTrue(appComponent.rootComponent.dependency === expectedProvider)
+        #endif
     }
 }
 
@@ -71,4 +79,4 @@ protocol MockRootDependency: AnyObject {}
 
 class MockRootComponent: Component<MockRootDependency> {}
 
-class MockRootDependencyProvider: MockRootDependency {}
+final class MockRootDependencyProvider: MockRootDependency, Sendable {}

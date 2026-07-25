@@ -60,22 +60,39 @@ public final class MockComponentPathBuilder {
     }
 }
 
+/// A box asserting to the compiler that the wrapped mock is safe to share
+/// across threads, so it can be captured by a `@Sendable` factory closure.
+/// The assertion is not compiler-enforced; see `MockComponentPath.register`.
+private final class UncheckedSendableBox: @unchecked Sendable {
+    let value: AnyObject
+    init(_ value: AnyObject) {
+        self.value = value
+    }
+}
+
 /// This class represents the mocked component path that describes the ancestory of a component.
 /// This can be used to register a mock dependency provider for the component. This class is not
 /// intended to be subclassed.
 public final class MockComponentPath {
     private let path: String
-    private var preexistingDependencyProviderFactory: ((Scope) -> AnyObject)? = nil
+    private var preexistingDependencyProviderFactory: (@Sendable (Scope) -> AnyObject)? = nil
     private var canUnregister = false
     fileprivate init(path: String) {
         self.path = path
     }
-    
+
     /// Register a dependency provider for the mocked component path.
+    ///
+    /// - note: The given mock provider is captured by a `@Sendable` factory
+    /// closure without compiler-enforced `Sendable` checking, since mocks are
+    /// arbitrary test objects. Ensure the mock is only used from a single
+    /// thread, or is itself thread-safe, if components are instantiated
+    /// concurrently in tests.
     public func register(dependencyProvider: AnyObject) {
         preexistingDependencyProviderFactory = __DependencyProviderRegistry.instance.dependencyProviderFactory(for: path)
+        let box = UncheckedSendableBox(dependencyProvider)
         __DependencyProviderRegistry.instance.registerDependencyProviderFactory(for: path) { _ in
-            return dependencyProvider
+            return box.value
         }
         canUnregister = true
     }

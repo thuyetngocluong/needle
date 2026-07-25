@@ -1,0 +1,15 @@
+{
+    "schemaVersion": "1.0",
+    "artifacts": {
+        "needle": {
+            "type": "executable",
+            "version": "0.25.1",
+            "variants": [
+                {
+                    "path": "needle/bin/needle",
+                    "supportedTriples": ["x86_64-apple-macosx", "arm64-apple-macosx"]
+                }
+            ]
+        }
+    }
+}

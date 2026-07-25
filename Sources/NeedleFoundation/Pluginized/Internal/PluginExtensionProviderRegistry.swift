@@ -41,7 +41,7 @@ public class __PluginExtensionProviderRegistry: @unchecked Sendable {
     /// - parameter pluginExtensionProviderFactory: The closure that takes
     /// in a component to be injected and returns a provider instance that
     /// conforms to the component's plugin extensions protocol.
-    public func registerPluginExtensionProviderFactory(`for` componentName: String, _ pluginExtensionProviderFactory: @escaping (PluginizedScope) -> AnyObject) {
+    public func registerPluginExtensionProviderFactory(`for` componentName: String, _ pluginExtensionProviderFactory: @escaping @Sendable (PluginizedScope) -> AnyObject) {
         // Lock on `providerFactories` access.
         lock.lock()
         defer {
@@ -54,13 +54,15 @@ public class __PluginExtensionProviderRegistry: @unchecked Sendable {
     func pluginExtensionProvider(`for` component: PluginizedScope) -> AnyObject {
         // Lock on `providerFactories` access.
         lock.lock()
-        defer {
-            lock.unlock()
-        }
-
         // The last element of the path is the component itself and it always exists.
         let key = component.path.last!
-        if let factory = providerFactories[key] {
+        let factory = providerFactories[key]
+        lock.unlock()
+
+        if let factory = factory {
+            // Invoke the factory outside the lock, so a slow provider
+            // construction on one thread does not serialize plugin extension
+            // resolution on all other threads.
             return factory(component)
         } else {
             // This case should never occur with properly generated Needle code.
@@ -70,7 +72,7 @@ public class __PluginExtensionProviderRegistry: @unchecked Sendable {
     }
 
     private let lock = NSRecursiveLock()
-    private var providerFactories = [String: (PluginizedScope) -> AnyObject]()
+    private var providerFactories = [String: @Sendable (PluginizedScope) -> AnyObject]()
 
     private init() {}
 }
