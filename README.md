@@ -89,22 +89,79 @@ Please follow the standard pod integration process and use `NeedleFoundation` po
 
 If the `NeedleFoundation` framework is integrated via Swift Package Manager, the code generator is already bundled with the package — no Homebrew or manual installation is needed. Two plugins are provided:
 
-**Build tool plugin** — runs the generator automatically before each build of the target it is attached to (the generated file is compiled into the target for you; do not commit it):
+**Build tool plugin** — runs the generator automatically before each build of the target it is attached to. The generated file is created in the build directory and compiled into the target for you: nothing to run manually, nothing to commit. See the step-by-step guide below.
+
+**Command plugin** — run the generator manually and commit the generated file, mirroring the classic workflow. See [Using the command plugin](#using-the-command-plugin).
+
+##### Running Needle via `NeedleBuildToolPlugin`
+
+*In a Swift package:* add the plugin to the application target in `Package.swift`:
 
 ```swift
-targets: [
-    .executableTarget(
-        name: "App",
-        dependencies: [.product(name: "NeedleFoundation", package: "needle")],
-        plugins: [.plugin(name: "NeedleBuildToolPlugin", package: "needle")]),
-],
+let package = Package(
+    name: "MyApp",
+    dependencies: [
+        .package(url: "https://github.com/uber/needle.git", .upToNextMajor(from: "VERSION_NUMBER")),
+    ],
+    targets: [
+        .executableTarget(
+            name: "App",
+            dependencies: [.product(name: "NeedleFoundation", package: "needle")],
+            plugins: [.plugin(name: "NeedleBuildToolPlugin", package: "needle")]),
+    ]
+)
 ```
 
-In Xcode projects, add `NeedleBuildToolPlugin` under the target's *Build Phases → Run Build Tool Plug-ins* instead.
+*In an Xcode project:*
 
-The build tool plugin parses the sources of the target it is attached to plus those of its dependency targets in the same package (or, for Xcode projects, its dependency targets in the same project) — external packages are not parsed. Note that dependency-providing properties on components must be `public` for the generator to see them.
+1. Add the needle package via *File → Add Package Dependencies…* and link `NeedleFoundation` to your app target.
+2. Open the app target's *Build Phases* tab, expand *Run Build Tool Plug-ins*, press *+* and add `NeedleBuildToolPlugin`.
+3. Build once; when Xcode asks about the plugin, choose *Trust & Enable*.
 
-**Command plugin** — run the generator manually and commit the generated file, mirroring the classic workflow:
+That's it — declare your components as usual and call `registerProviderFactories()` at startup. The function is generated into the same module, so no extra import is needed:
+
+```swift
+import NeedleFoundation
+
+protocol RootDependency: Dependency {
+    var apiClient: APIClient { get }
+}
+
+class AppComponent: BootstrapComponent {
+    // Provider properties must be `public`, otherwise the generator
+    // does not consider them when resolving dependencies.
+    public var apiClient: APIClient {
+        return shared { APIClient() }
+    }
+
+    var rootComponent: RootComponent {
+        return RootComponent(parent: self)
+    }
+}
+
+class RootComponent: Component<RootDependency> {}
+```
+
+```swift
+@main
+struct MyApp: App {
+    init() {
+        registerProviderFactories()
+    }
+    // ...
+}
+```
+
+Good to know:
+
+- The plugin parses the sources of the target it is attached to plus those of its dependency targets in the same package (or, for Xcode projects, its dependency targets in the same project). Attach the plugin to the application target only — dependency modules are picked up from there automatically.
+- External packages are never parsed. If your components live in a separate package, use the command plugin below and pass the paths explicitly.
+- Regeneration is incremental: the generator only re-runs when one of the parsed Swift files actually changes.
+- If a dependency cannot be resolved, the build fails with the generator's `Could not find a provider for …` warnings in the build log — the most common cause is a provider property that is not `public`.
+
+##### Using the command plugin
+
+Run the generator manually and commit the generated file, mirroring the classic workflow:
 
 ```
 swift package --allow-writing-to-package-directory needle \
